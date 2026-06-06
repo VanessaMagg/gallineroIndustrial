@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GallineroSmart — Nave Industrial</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --panel:    #1c2330;
+  --border:   #30363d;
+  --green:    #3fb950;
+  --green-d:  #238636;
+  --amber:    #d29922;
+  --red:      #f85149;
+  --blue:     #58a6ff;
+  --cyan:     #79c0ff;
+  --text:     #e6edf3;
+  --muted:    #8b949e;
+  --warm:     #ff9d45;
+}
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--green);
+}
+.brand span { color: var(--muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; margin-left: 8px; }
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 1.4s ease-in-out infinite;
+  margin-left: auto;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.topbar-right { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+/* ── MAIN LAYOUT ── */
+.main { display: grid; grid-template-columns: 1fr 280px; gap: 0; height: calc(100vh - 52px); }
+
+/* ── NAVE SCENE ── */
+.scene-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #070b10;
+  border-right: 1px solid var(--border);
+}
+
+canvas#nave { display:block; width:100%; height:100%; }
+
+/* ── HUD overlays ── */
+.hud {
+  position: absolute;
+  top: 16px; left: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.hud-chip {
+  background: rgba(13,17,23,.85);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  display: flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(6px);
+}
+.hud-chip .dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sidebar::-webkit-scrollbar { width:4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+
+.s-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CONTROL CARD ── */
+.ctrl-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* ── TOGGLE ── */
+.tog-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
+.tog-row:last-child { border-bottom: none; }
+.tog-label { font-size: 12px; font-weight: 500; }
+.tog-sub   { font-size: 10px; color: var(--muted); margin-top:1px; }
+.tog {
+  width: 38px; height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.tog.on { background: var(--green-d); box-shadow: 0 0 8px var(--green)44; }
+.tog::after {
+  content:''; position:absolute;
+  top:3px; left:3px;
+  width:14px; height:14px;
+  background:#fff; border-radius:50%;
+  transition: transform .2s;
+}
+.tog.on::after { transform: translateX(18px); }
+
+/* ── GAUGE ── */
+.gauge-wrap { margin: 6px 0; }
+.gauge-label { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:3px; font-family:'IBM Plex Mono',monospace; }
+.gauge-track { background: var(--bg); border-radius:3px; height:5px; overflow:hidden; }
+.gauge-fill  { height:100%; border-radius:3px; transition: width .6s; }
+
+/* ── BIG NUM ── */
+.big-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+.big-unit { font-size: 16px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-left:3px; }
+.num-sub { font-size: 11px; color: var(--muted); margin-top:2px; }
+
+/* ── SILO VISUAL ── */
+.silos-row { display:flex; gap:10px; justify-content:center; padding:6px 0; }
+.silo-unit { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.silo-body {
+  width: 48px; height: 80px;
+  border: 1px solid var(--border);
+  border-radius: 4px 4px 0 0;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.silo-fill-bar {
+  position:absolute; bottom:0; width:100%;
+  border-radius: 2px 2px 0 0;
+  transition: height .8s cubic-bezier(.4,0,.2,1);
+}
+.silo-top {
+  width: 0; height: 0;
+  border-left: 24px solid transparent;
+  border-right: 24px solid transparent;
+  margin-bottom: -1px;
+}
+.silo-pct { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.silo-name { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+
+/* ── WATER TANK ── */
+.tank-outer {
+  width:100%; height:56px;
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.tank-wave-fill {
+  position:absolute; bottom:0; width:100%;
+  transition: height .8s;
+  background: linear-gradient(to top, #1e4d7b, #2563a833);
+}
+.tank-text {
+  position:absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600;
+  color: var(--blue); z-index:2;
+}
+
+/* ── ALARM RING ── */
+.alarm-state {
+  display:flex; align-items:center; justify-content:center;
+  padding: 10px;
+  border-radius: 8px;
+  gap: 10px;
+  font-size: 13px; font-weight: 500;
+  border: 1px solid;
+  margin-bottom: 4px;
+}
+.alarm-green { background:#238636/22; border-color:#238636; color:var(--green); }
+.alarm-amber { background:#d29922/22; border-color:#d29922; color:var(--amber); }
+.alarm-red   { background:#f85149/22; border-color:#f85149; color:var(--red); animation: flash-border .8s ease-in-out infinite; }
+@keyframes flash-border { 0%,100%{box-shadow:0 0 0 0 #f8514900} 50%{box-shadow:0 0 12px 2px #f8514966} }
+
+/* ── SLIDER ── */
+input[type=range] {
+  -webkit-appearance:none; width:100%; height:4px;
+  background: var(--border); border-radius:2px; outline:none;
+  cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px;
+  border-radius:50%; background: var(--green);
+  box-shadow: 0 0 6px var(--green)66;
+  cursor:pointer;
+}
+
+/* ── BUTTON ── */
+.btn {
+  padding:7px 14px; border-radius:6px; font-size:11px; font-weight:500;
+  border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+  transition: all .15s;
+}
+.btn:hover { background: var(--border); }
+.btn-green { background: var(--green-d); border-color: var(--green); color:#fff; }
+.btn-green:hover { background: #2ea043; }
+.btn-red   { background: #3d1a1a; border-color: var(--red); color:var(--red); }
+
+/* ── KPI ROW ── */
+.kpi-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.kpi { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; }
+.kpi-label { font-size:9px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); font-family:'IBM Plex Mono',monospace; margin-bottom:4px; }
+.kpi-val { font-family:'Bebas Neue',monospace; font-size:28px; line-height:1; }
+.kpi-unit { font-size:11px; color:var(--muted); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  .main { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
+  .scene-wrap { border-right:none; border-bottom:1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">GallineroSmart <span>NAVE INDUSTRIAL v1.0</span></div>
+  <div class="topbar-right">
+    <span id="clock-display">--:--:--</span>
+    <span>NAVE-01</span>
+    <span>50 gallinas</span>
+    <div class="live-dot"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ═══ SCENE ═══ -->
+  <div class="scene-wrap">
+    <canvas id="nave"></canvas>
+
+    <!-- HUD chips -->
+    <div class="hud">
+      <div class="hud-chip">
+        <div class="dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>
+        <span id="hud-temp">T: 22°C</span>
+      </div>
+      <div class="hud-chip">
+        <div class="dot" style="background:var(--blue)"></div>
+        <span id="hud-hum">H: 61%</span>
+      </div>
+      <div class="hud-chip">
+        <div class="dot" id="fan-dot" style="background:var(--muted)"></div>
+        <span id="hud-fan">EXTRACTOR: OFF</span>
+      </div>
+      <div class="hud-chip">
+        <div class="dot" id="led-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></div>
+        <span id="hud-led">LUZ: ON · 14h</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar">
+
+    <!-- ALARMA -->
+    <div class="ctrl-card">
+      <div class="s-title">Estado del sistema</div>
+      <div class="alarm-state alarm-green" id="alarm-box">
+        <span id="alarm-icon">●</span>
+        <span id="alarm-text">VERDE — Todo OK</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-green" onclick="setAlarm('green')">Verde</button>
+        <button class="btn" onclick="setAlarm('amber')" style="border-color:var(--amber);color:var(--amber)">Amarillo</button>
+        <button class="btn btn-red" onclick="setAlarm('red')">Rojo</button>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="ctrl-card">
+      <div class="s-title">Producción del día</div>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Huevos</div>
+          <div class="kpi-val" style="color:var(--green)">47<span class="kpi-unit">u</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Gallinas</div>
+          <div class="kpi-val" style="color:var(--cyan)">50<span class="kpi-unit">act</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Mortalidad</div>
+          <div class="kpi-val" style="color:var(--green)">0<span class="kpi-unit">hoy</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Postura</div>
+          <div class="kpi-val" style="color:var(--amber)">94<span class="kpi-unit">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPERATURA -->
+    <div class="ctrl-card">
+      <div class="s-title">Temperatura</div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
+        <span class="big-num" id="temp-display" style="color:var(--green)">22</span>
+        <span class="big-unit">°C</span>
+        <span id="temp-range-label" style="font-size:10px;color:var(--green);margin-left:8px">✓ Rango ideal</span>
+      </div>
+      <input type="range" min="0" max="50" value="22" id="temp-slider" oninput="updateTemp(this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace">
+        <span>0°</span><span>10°</span><span>26°</span><span>50°</span>
+      </div>
+    </div>
+
+    <!-- SISTEMA DE LUCES -->
+    <div class="ctrl-card">
+      <div class="s-title">Iluminación LED</div>
+      <div class="tog-row">
+        <div><div class="tog-label">💡 Tiras LED 12V</div><div class="tog-sub">Ciclo solar 14 h/día</div></div>
+        <div class="tog on" id="led-tog" onclick="toggleLED()"></div>
+      </div>
+      <div class="gauge-wrap" style="margin-top:6px">
+        <div class="gauge-label"><span>Intensidad</span><span id="lux-val">680 lux</span></div>
+        <div class="gauge-track"><div class="gauge-fill" id="lux-gauge" style="width:68%;background:var(--amber)"></div></div>
+        <input type="range" min="0" max="100" value="68" style="margin-top:6px" oninput="setLux(this.value)">
+      </div>
+    </div>
+
+    <!-- VENTILACIÓN -->
+    <div class="ctrl-card">
+      <div class="s-title">Ventilación</div>
+      <div class="tog-row">
+        <div><div class="tog-label">🌀 Extractor industrial</div><div class="tog-sub" id="fan-sub">Inactivo · activa &gt;26°C</div></div>
+        <div class="tog" id="fan-tog" onclick="toggleFan()"></div>
+      </div>
+      <div class="tog-row">
+        <div><div class="tog-label">🔥 Calefactor</div><div class="tog-sub" id="heat-sub">Inactivo · activa &lt;10°C</div></div>
+        <div class="tog" id="heat-tog" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--muted)">Velocidad extractor</div>
+      <input type="range" min="0" max="100" value="0" id="fan-speed" style="margin-top:4px" oninput="setFanSpeed(this.value)">
+      <div style="font-size:10px;color:var(--muted);text-align:right;font-family:'IBM Plex Mono',monospace;margin-top:2px" id="fan-speed-label">0 RPM</div>
+    </div>
+
+    <!-- SILOS -->
+    <div class="ctrl-card">
+      <div class="s-title">Silos de alimento</div>
+      <div class="silos-row">
+        <div class="silo-unit">
+          <div class="silo-top" style="border-bottom:12px solid #c4a838"></div>
+          <div class="silo-body"><div class="silo-fill-bar" id="sa-fill" style="height:68%;background:linear-gradient(to top,#c4a838,#e8d060)"></div></div>
+          <div class="silo-pct" id="sa-pct" style="color:#c4a838">68%</div>
+          <div class="silo-name">Silo A</div>
+        </div>
+        <div class="silo-unit">
+          <div class="silo-top" style="border-bottom:12px solid #f85149"></div>
+          <div class="silo-body"><div class="silo-fill-bar" id="sb-fill" style="height:22%;background:linear-gradient(to top,#f85149,#ff8080)"></div></div>
+          <div class="silo-pct" id="sb-pct" style="color:#f85149">22%</div>
+          <div class="silo-name">Silo B ⚠</div>
+        </div>
+        <div class="silo-unit">
+          <div class="silo-top" style="border-bottom:12px solid #58a6ff"></div>
+          <div class="silo-body"><div class="silo-fill-bar" id="sc-fill" style="height:85%;background:linear-gradient(to top,#2563a8,#79c0ff)"></div></div>
+          <div class="silo-pct" id="sc-pct" style="color:#58a6ff">85%</div>
+          <div class="silo-name">Silo C</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace;">
+        Consumo: 3.2 kg/día · Capacidad: 50 kg × 3
+      </div>
+      <button class="btn btn-green" style="margin-top:8px;width:100%" onclick="refillSilos()">Reponer silos</button>
+    </div>
+
+    <!-- AGUA -->
+    <div class="ctrl-card">
+      <div class="s-title">Sistema de agua</div>
+      <div class="tank-outer" style="margin-bottom:8px">
+        <div class="tank-wave-fill" id="tank-fill" style="height:74%"></div>
+        <div class="tank-text" id="tank-pct">74%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+        <div style="color:var(--muted)">Presión</div><div style="font-family:'IBM Plex Mono',monospace;text-align:right">1.2 bar</div>
+        <div style="color:var(--muted)">Consumo</div><div style="font-family:'IBM Plex Mono',monospace;text-align:right">3.8 L/día</div>
+        <div style="color:var(--muted)">Autonomía</div><div style="font-family:'IBM Plex Mono',monospace;text-align:right;color:var(--green)">~19 días</div>
+      </div>
+      <input type="range" min="0" max="100" value="74" style="margin-top:8px" oninput="setWater(this.value)">
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── CLOCK ──
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock-display').textContent =
+    d.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── CANVAS SETUP ──
+const canvas = document.getElementById('nave');
+const ctx = canvas.getContext('2d');
+let W, H;
+let fanAngle = 0, fanOn = false, fanSpeed = 0;
+let ledOn = true, ledBrightness = 0.68;
+let alarmState = 'green';
+let tempVal = 22;
+let chickens = [];
+let eggs = [];
+let particles = []; // feed particles
+let foodDropTimer = 0;
+
+function resize() {
+  W = canvas.offsetWidth;
+  H = canvas.offsetHeight;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', () => { resize(); initChickens(); });
+resize();
+
+// ── CHICKENS ──
+const CHICKEN_COLORS = ['#f5dba8','#f5c842','#f0b428','#f5d066','#e8c838'];
+function initChickens() {
+  chickens = [];
+  const count = 16;
+  for (let i = 0; i < count; i++) {
+    chickens.push({
+      x: 80 + Math.random() * (W - 160),
+      y: H * 0.62 + Math.random() * (H * 0.22),
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.15,
+      color: CHICKEN_COLORS[Math.floor(Math.random() * CHICKEN_COLORS.length)],
+      size: 16 + Math.random() * 6,
+      bobPhase: Math.random() * Math.PI * 2,
+      bobSpeed: 0.04 + Math.random() * 0.03,
+      walkAnim: Math.random() * Math.PI * 2,
+      eatTimer: Math.floor(Math.random() * 120),
+      eating: false,
+    });
+  }
+}
+initChickens();
+
+// ── EGGS ──
+for (let i=0; i<6; i++) {
+  eggs.push({
+    x: 120 + Math.random() * (W * 0.6),
+    y: H * 0.72 + Math.random() * (H * 0.1),
+  });
+}
+
+// ── DRAW FUNCTIONS ──
+function drawShedStructure() {
+  // floor
+  ctx.fillStyle = '#1a1008';
+  ctx.fillRect(0, H * 0.68, W, H * 0.32);
+
+  // floor grid lines
+  ctx.strokeStyle = '#ffffff08';
+  ctx.lineWidth = 1;
+  for (let y = H*0.68; y < H; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  for (let x = 0; x < W; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, H*0.68); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  // walls
+  ctx.fillStyle = '#1c2330';
+  ctx.fillRect(0, 0, W, H * 0.68);
+
+  // wall texture horizontal lines
+  ctx.strokeStyle = '#ffffff04';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < H * 0.68; y += 20) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // vertical support columns
+  const cols = Math.floor(W / 120);
+  for (let i = 0; i <= cols; i++) {
+    const x = i * (W / cols);
+    const grad = ctx.createLinearGradient(x-8, 0, x+8, 0);
+    grad.addColorStop(0, '#0d1117');
+    grad.addColorStop(0.5, '#2d3748');
+    grad.addColorStop(1, '#0d1117');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - 8, 0, 16, H * 0.68);
+  }
+
+  // wall/floor separation
+  ctx.fillStyle = '#30363d';
+  ctx.fillRect(0, H*0.675, W, 3);
+
+  // roof trusses
+  ctx.strokeStyle = '#2d3748';
+  ctx.lineWidth = 3;
+  for (let i = 0; i <= cols; i++) {
+    const x = i * (W / cols);
+    ctx.beginPath();
+    ctx.moveTo(x - 8, 0);
+    ctx.lineTo(W/2, -H*0.15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 8, 0);
+    ctx.lineTo(W/2, -H*0.15);
+    ctx.stroke();
+  }
+}
+
+function drawLights() {
+  if (!ledOn) return;
+  const count = Math.floor(W / 80);
+  for (let i = 0; i < count; i++) {
+    const lx = 40 + i * 80;
+    const ly = 28;
+    // bulb body
+    ctx.fillStyle = `rgba(255,210,80,${0.6 + ledBrightness * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 7, 0, Math.PI*2);
+    ctx.fill();
+    // glow cone
+    const coneGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, 180);
+    const alpha = ledBrightness * 0.12;
+    coneGrad.addColorStop(0, `rgba(255,200,60,${alpha * 3})`);
+    coneGrad.addColorStop(0.3, `rgba(255,180,40,${alpha})`);
+    coneGrad.addColorStop(1, 'rgba(255,160,0,0)');
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 180, 0, Math.PI*2);
+    ctx.fill();
+    // wire
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(lx, 0);
+    ctx.lineTo(lx, ly - 7);
+    ctx.stroke();
+  }
+}
+
+function drawFan() {
+  const fx = W - 60, fy = H * 0.3;
+  const fr = 38;
+  // housing
+  ctx.fillStyle = '#1c2330';
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(fx, fy, fr + 6, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+  // grille
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(fx + Math.cos(a) * fr, fy + Math.sin(a) * fr);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(fx, fy, fr * 0.6, 0, Math.PI*2);
+  ctx.stroke();
+  // blades
+  ctx.save();
+  ctx.translate(fx, fy);
+  ctx.rotate(fanAngle);
+  const bladeCount = 5;
+  for (let i = 0; i < bladeCount; i++) {
+    ctx.save();
+    ctx.rotate((i / bladeCount) * Math.PI * 2);
+    const bGrad = ctx.createLinearGradient(0, -fr*0.9, 0, -fr*0.2);
+    bGrad.addColorStop(0, fanOn ? '#79c0ff' : '#555');
+    bGrad.addColorStop(1, '#30363d');
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.ellipse(6, -fr * 0.55, 10, fr * 0.35, 0.3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  // center hub
+  ctx.fillStyle = '#444';
+  ctx.beginPath();
+  ctx.arc(0, 0, 8, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  // spin indicator
+  if (fanOn) {
+    ctx.fillStyle = '#79c0ff';
+    ctx.font = 'bold 9px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(fanSpeed * 18)} RPM`, fx, fy + fr + 18);
+  }
+}
+
+function drawComederos() {
+  const count = Math.floor(W / 130);
+  for (let i = 0; i < count; i++) {
+    const cx = 65 + i * (W - 100) / (count - 1);
+    const cy = H * 0.69;
+    // trough body
+    ctx.fillStyle = '#2d3748';
+    ctx.beginPath();
+    ctx.roundRect(cx - 28, cy, 56, 14, 4);
+    ctx.fill();
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // feed inside
+    ctx.fillStyle = '#c4a838';
+    ctx.beginPath();
+    ctx.roundRect(cx - 24, cy + 3, 48, 8, 3);
+    ctx.fill();
+    // support pole
+    ctx.fillStyle = '#555';
+    ctx.fillRect(cx - 2, H * 0.58, 4, H * 0.11);
+    // overhead feeder pipe
+    ctx.fillStyle = '#30363d';
+    ctx.fillRect(cx - 35, H * 0.55, 70, 6);
+  }
+}
+
+function drawWaterLine() {
+  const y = H * 0.64;
+  ctx.fillStyle = '#1e3a5f';
+  ctx.fillRect(20, y, W - 40, 8);
+  ctx.fillStyle = '#2563a8';
+  ctx.fillRect(20, y, W - 40, 4);
+  // nipple drinkers
+  const count = Math.floor(W / 60);
+  for (let i = 0; i < count; i++) {
+    const nx = 40 + i * 60;
+    ctx.fillStyle = '#555';
+    ctx.beginPath();
+    ctx.arc(nx, y + 8, 4, 0, Math.PI*2);
+    ctx.fill();
+    // water drop
+    ctx.fillStyle = '#58a6ffaa';
+    ctx.beginPath();
+    ctx.arc(nx, y + 16, 2.5, 0, Math.PI*2);
+    ctx.fill();
+  }
+  // label
+  ctx.fillStyle = '#58a6ff88';
+  ctx.font = '9px IBM Plex Mono';
+  ctx.textAlign = 'left';
+  ctx.fillText('LÍNEA DE AGUA — GOTEO', 24, y - 4);
+}
+
+function drawNestBoxes() {
+  const rows = 3;
+  const startX = 20;
+  const startY = H * 0.2;
+  const bw = 38, bh = 30;
+  const gap = 4;
+  // back board
+  ctx.fillStyle = '#1a1f2e';
+  ctx.fillRect(startX - 4, startY - 4, (bw + gap) * 4 + 8, (bh + gap) * rows + 8);
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(startX - 4, startY - 4, (bw + gap) * 4 + 8, (bh + gap) * rows + 8);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < 4; c++) {
+      const bx = startX + c * (bw + gap);
+      const by = startY + r * (bh + gap);
+      ctx.fillStyle = '#2d3748';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      // interior shadow
+      ctx.fillStyle = '#1a1f2e';
+      ctx.beginPath();
+      ctx.roundRect(bx + 4, by + 4, bw - 8, bh - 8, 2);
+      ctx.fill();
+      // hay color
+      if (Math.random() > 0.5) {
+        ctx.fillStyle = '#3d3010aa';
+        ctx.beginPath();
+        ctx.roundRect(bx + 4, by + 4, bw - 8, bh - 8, 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '8px IBM Plex Mono';
+  ctx.textAlign = 'left';
+  ctx.fillText('NIDALES (12 celdas)', startX, startY - 8);
+}
+
+function drawChicken(c) {
+  const bob = Math.sin(c.bobPhase) * 2;
+  const s = c.size;
+  const bx = c.x, by = c.y + bob;
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(bx, by + s * 0.55, s * 0.7, s * 0.12, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // body
+  ctx.fillStyle = c.color;
+  ctx.beginPath();
+  ctx.ellipse(bx, by, s * 0.7, s * 0.48, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // head
+  ctx.beginPath();
+  ctx.arc(bx + s * 0.55, by - s * 0.28, s * 0.3, 0, Math.PI*2);
+  ctx.fill();
+
+  // beak
+  ctx.fillStyle = '#f0a030';
+  ctx.beginPath();
+  ctx.moveTo(bx + s * 0.85, by - s * 0.28);
+  ctx.lineTo(bx + s * 1.05, by - s * 0.22);
+  ctx.lineTo(bx + s * 0.85, by - s * 0.18);
+  ctx.fill();
+
+  // eye
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(bx + s * 0.65, by - s * 0.33, s * 0.07, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(bx + s * 0.66, by - s * 0.34, s * 0.03, 0, Math.PI*2);
+  ctx.fill();
+
+  // comb
+  ctx.fillStyle = '#cc2222';
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc(bx + s * (0.48 + i * 0.1), by - s * 0.58 - i*1.5, s * 0.07, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // wattle
+  ctx.fillStyle = '#cc3333';
+  ctx.beginPath();
+  ctx.ellipse(bx + s * 0.7, by - s * 0.12, s * 0.06, s * 0.1, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // wings
+  ctx.fillStyle = c.color + 'cc';
+  ctx.beginPath();
+  ctx.ellipse(bx - s * 0.15, by + s * 0.05, s * 0.45, s * 0.25, -0.3, 0, Math.PI*2);
+  ctx.fill();
+
+  // legs (walking anim)
+  const legSwing = Math.sin(c.walkAnim) * 5;
+  ctx.strokeStyle = '#d4a040';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(bx - s*0.2, by + s*0.4);
+  ctx.lineTo(bx - s*0.2 + legSwing, by + s*0.55);
+  ctx.lineTo(bx - s*0.1 + legSwing, by + s*0.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(bx + s*0.1, by + s*0.4);
+  ctx.lineTo(bx + s*0.1 - legSwing, by + s*0.55);
+  ctx.lineTo(bx + legSwing, by + s*0.6);
+  ctx.stroke();
+
+  // eating animation
+  if (c.eating) {
+    ctx.strokeStyle = var_green + '88';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(bx + s*0.85, by - s*0.22, s*0.5, 0, Math.PI*2);
+    ctx.stroke();
+  }
+}
+
+const var_green = '#3fb950';
+
+function drawEgg(e) {
+  ctx.fillStyle = '#f8f0e0';
+  ctx.beginPath();
+  ctx.ellipse(e.x, e.y, 6, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#d4c8b0';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+}
+
+function drawFeedParticles() {
+  particles.forEach((p, i) => {
+    ctx.fillStyle = `rgba(196,168,56,${p.alpha})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+    p.y += p.vy;
+    p.x += p.vx;
+    p.alpha -= 0.015;
+    if (p.alpha <= 0) particles.splice(i, 1);
+  });
+}
+
+function spawnFeed(x, y) {
+  for (let i = 0; i < 6; i++) {
+    particles.push({
+      x: x + (Math.random()-0.5)*20,
+      y: y,
+      vx: (Math.random()-0.5)*1.5,
+      vy: 1 + Math.random()*2,
+      r: 1.5 + Math.random()*2,
+      alpha: 0.9,
+    });
+  }
+}
+
+function drawTempOverlay() {
+  if (tempVal > 26) {
+    const g = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.6);
+    g.addColorStop(0, 'rgba(248,81,73,0.08)');
+    g.addColorStop(1, 'rgba(248,81,73,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  } else if (tempVal < 10) {
+    const g = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.6);
+    g.addColorStop(0, 'rgba(88,166,255,0.08)');
+    g.addColorStop(1, 'rgba(88,166,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawSiloIndicators() {
+  // mini silo icons on far right wall
+  const sx = W - 30;
+  [0.25, 0.45, 0.65].forEach((py, i) => {
+    const sy = H * py;
+    ctx.fillStyle = ['#c4a838','#f85149','#58a6ff'][i];
+    ctx.fillRect(sx - 6, sy, 12, 24);
+    ctx.fillStyle = '#30363d';
+    ctx.font = '7px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(['68%','22%','85%'][i], sx, sy + 32);
+  });
+}
+
+// ── MAIN LOOP ──
+let frame = 0;
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+
+  drawTempOverlay();
+  drawShedStructure();
+  drawLights();
+  drawNestBoxes();
+  drawSiloIndicators();
+  drawComederos();
+  drawWaterLine();
+
+  // update & draw chickens
+  chickens.forEach(c => {
+    c.bobPhase += c.bobSpeed;
+    c.walkAnim += 0.08;
+    c.x += c.vx;
+    c.y += c.vy;
+    if (c.x < 40)  { c.x = 40;  c.vx = Math.abs(c.vx); }
+    if (c.x > W-40){ c.x = W-40; c.vx = -Math.abs(c.vx); }
+    if (c.y < H*0.65) { c.y = H*0.65; c.vy = Math.abs(c.vy) * 0.5; }
+    if (c.y > H*0.85) { c.y = H*0.85; c.vy = -Math.abs(c.vy) * 0.5; }
+    c.eatTimer--;
+    if (c.eatTimer <= 0) {
+      c.eating = !c.eating;
+      c.eatTimer = 60 + Math.floor(Math.random() * 120);
+      if (c.eating) spawnFeed(c.x + c.size * 0.85, c.y);
+    }
+    drawChicken(c);
+  });
+
+  eggs.forEach(e => drawEgg(e));
+  drawFeedParticles();
+  drawFan();
+
+  // fan rotation
+  if (fanOn) fanAngle += (fanSpeed / 100) * 0.25;
+
+  // feed drop animation
+  foodDropTimer++;
+  if (foodDropTimer > 80) {
+    foodDropTimer = 0;
+    const count = Math.floor(W / 130);
+    for (let i = 0; i < count; i++) {
+      const cx = 65 + i * (W-100) / (count-1);
+      spawnFeed(cx, H * 0.55);
+    }
+  }
+
+  frame++;
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── CONTROLS ──
+let fanToggleState = false;
+function toggleFan() {
+  fanToggleState = !fanToggleState;
+  fanOn = fanToggleState;
+  const tog = document.getElementById('fan-tog');
+  tog.classList.toggle('on', fanOn);
+  const speed = fanOn ? 60 : 0;
+  document.getElementById('fan-speed').value = speed;
+  setFanSpeed(speed);
+  document.getElementById('fan-sub').textContent = fanOn ? '✅ ACTIVO' : 'Inactivo · activa >26°C';
+  document.getElementById('hud-fan').textContent = fanOn ? 'EXTRACTOR: ON' : 'EXTRACTOR: OFF';
+  document.getElementById('fan-dot').style.background = fanOn ? 'var(--blue)' : 'var(--muted)';
+  if (fanOn) document.getElementById('fan-dot').style.boxShadow = '0 0 6px var(--blue)';
+  else document.getElementById('fan-dot').style.boxShadow = 'none';
+}
+
+function setFanSpeed(v) {
+  v = parseInt(v);
+  fanSpeed = v;
+  document.getElementById('fan-speed-label').textContent = Math.round(v * 18) + ' RPM';
+  if (v > 0 && !fanOn) { fanOn = true; document.getElementById('fan-tog').classList.add('on'); }
+  if (v === 0) { fanOn = false; document.getElementById('fan-tog').classList.remove('on'); }
+}
+
+let ledToggleState = true;
+function toggleLED() {
+  ledToggleState = !ledToggleState;
+  ledOn = ledToggleState;
+  document.getElementById('led-tog').classList.toggle('on', ledOn);
+  document.getElementById('hud-led').textContent = ledOn ? 'LUZ: ON · 14h' : 'LUZ: OFF';
+  document.getElementById('led-dot').style.background = ledOn ? 'var(--amber)' : 'var(--muted)';
+  document.getElementById('led-dot').style.boxShadow = ledOn ? '0 0 6px var(--amber)' : 'none';
+}
+
+function setLux(v) {
+  v = parseInt(v);
+  ledBrightness = v / 100;
+  document.getElementById('lux-val').textContent = Math.round(v * 10) + ' lux';
+  document.getElementById('lux-gauge').style.width = v + '%';
+}
+
+function updateTemp(v) {
+  v = parseInt(v);
+  tempVal = v;
+  const col = v > 26 ? 'var(--red)' : v < 10 ? 'var(--blue)' : 'var(--green)';
+  document.getElementById('temp-display').textContent = v;
+  document.getElementById('temp-display').style.color = col;
+  let lbl, lalm;
+  if (v > 26) {
+    lbl = '⚠ Temperatura alta';
+    if (!fanToggleState) toggleFan();
+    setAlarm('amber');
+  } else if (v < 10) {
+    lbl = '⚠ Temperatura baja';
+    setAlarm('amber');
+  } else {
+    lbl = '✓ Rango ideal';
+    setAlarm('green');
+  }
+  document.getElementById('temp-range-label').textContent = lbl;
+  document.getElementById('temp-range-label').style.color = col;
+  document.getElementById('hud-temp').textContent = `T: ${v}°C`;
+}
+
+function setAlarm(state) {
+  alarmState = state;
+  const box = document.getElementById('alarm-box');
+  box.className = 'alarm-state alarm-' + state;
+  const msgs = { green:'VERDE — Todo OK', amber:'AMARILLO — Aviso', red:'ROJO — Urgente' };
+  document.getElementById('alarm-text').textContent = msgs[state];
+}
+
+function refillSilos() {
+  ['sa','sb','sc'].forEach(id => {
+    document.getElementById(id+'-fill').style.height = '90%';
+    document.getElementById(id+'-pct').textContent = '90%';
+  });
+  document.getElementById('sb-fill').style.background = 'linear-gradient(to top,#c4a838,#e8d060)';
+  document.getElementById('sb-pct').style.color = '#c4a838';
+}
+
+function setWater(v) {
+  v = parseInt(v);
+  document.getElementById('tank-fill').style.height = v + '%';
+  document.getElementById('tank-pct').textContent = v + '%';
+}
+</script>
+</body>
+</html>

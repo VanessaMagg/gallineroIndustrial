@@ -1,0 +1,1382 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  :root {
+    --bg: #f5f2eb;
+    --card: #ffffff;
+    --border: #e2ddd4;
+    --text: #1a1a18;
+    --muted: #7a7568;
+    --green: #3a7d44;
+    --green-light: #e8f5eb;
+    --amber: #c17f24;
+    --amber-light: #fef3e2;
+    --red: #b53a2f;
+    --red-light: #fde8e6;
+    --blue: #2563a8;
+    --blue-light: #e8f0fb;
+    --accent: #3a7d44;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── NAV BAR ── */
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .logo i { font-size: 18px; }
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    margin-left: 20px;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--muted);
+    transition: all .15s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-tab:hover { background: var(--bg); color: var(--text); }
+  .nav-tab.active { background: var(--green-light); color: var(--green); }
+
+  .alarm-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    background: var(--green-light);
+    border: 1px solid #b6dfbc;
+    border-radius: 20px;
+    padding: 4px 12px 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--green);
+    cursor: pointer;
+  }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding: 20px; }
+  .screen.active { display: block; }
+
+  /* ── GRID ── */
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title i { font-size: 14px; }
+  .big-val {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    font-family: 'DM Mono', monospace;
+  }
+  .big-unit { font-size: 16px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── STATUS PILLS ── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .pill-green { background: var(--green-light); color: var(--green); }
+  .pill-amber { background: var(--amber-light); color: var(--amber); }
+  .pill-red   { background: var(--red-light);   color: var(--red); }
+  .pill-blue  { background: var(--blue-light);  color: var(--blue); }
+  .pill i { font-size: 12px; }
+
+  /* ── SECTION TITLE ── */
+  .section-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── GAUGE BAR ── */
+  .gauge-wrap { margin-top: 8px; }
+  .gauge-track {
+    background: var(--bg);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .gauge-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+  .gauge-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ── ALARM WIDGET ── */
+  .alarm-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+  }
+  .alarm-light {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+  }
+  .alarm-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 3px solid;
+    opacity: .3;
+    animation: ring-pulse 2s infinite;
+  }
+  @keyframes ring-pulse { 0%,100%{transform:scale(1);opacity:.3} 50%{transform:scale(1.08);opacity:.6} }
+  .alarm-green { background: var(--green-light); color: var(--green); }
+  .alarm-green .alarm-ring { border-color: var(--green); }
+  .alarm-amber { background: var(--amber-light); color: var(--amber); }
+  .alarm-amber .alarm-ring { border-color: var(--amber); }
+  .alarm-red   { background: var(--red-light);   color: var(--red); }
+  .alarm-red .alarm-ring   { border-color: var(--red); }
+  .alarm-label { font-size: 13px; font-weight: 600; }
+  .alarm-desc  { font-size: 12px; color: var(--muted); text-align: center; }
+
+  /* ── MINI CHART (SVG) ── */
+  .sparkline { width: 100%; height: 48px; }
+
+  /* ── TOGGLE SWITCH ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 13px; font-weight: 500; }
+  .toggle-sub   { font-size: 11px; color: var(--muted); }
+  .toggle {
+    width: 40px; height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background .2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--green); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+  }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tbl td { padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--bg); }
+
+  /* ── TEMP SCALE ── */
+  .temp-scale {
+    position: relative;
+    height: 18px;
+    border-radius: 9px;
+    background: linear-gradient(to right, #3B8BD4, #6cc, #3a7d44, #F0992E, #E24B4A);
+    margin: 10px 0 4px;
+  }
+  .temp-needle {
+    position: absolute;
+    top: -4px;
+    width: 4px;
+    height: 26px;
+    background: var(--text);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    transition: left .6s;
+  }
+  .temp-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-family: 'DM Sans', sans-serif;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-primary:hover { background: #2d6535; }
+  .btn-danger { background: var(--red-light); color: var(--red); border-color: #f5c3be; }
+
+  /* ── SIGNATURE BOX ── */
+  .sig-box {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .sig-box:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+  .sig-box i { font-size: 28px; display: block; margin-bottom: 6px; }
+
+  /* ── DFD STYLES ── */
+  .dfd-svg { width: 100%; height: auto; display: block; }
+
+  /* ── NOTIFICATION ITEM ── */
+  .notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .notif-text { font-size: 13px; }
+  .notif-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-val { font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* ── SILO VISUAL ── */
+  .silo-wrap { display: flex; gap: 16px; align-items: flex-end; justify-content: center; margin: 10px 0; }
+  .silo-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .silo-bar {
+    width: 36px;
+    border-radius: 4px 4px 0 0;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .silo-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height .8s;
+  }
+  .silo-label { font-size: 11px; color: var(--muted); }
+  .silo-pct { font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* ── LIGHT TIMELINE ── */
+  .light-bar {
+    height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .light-segment {
+    position: absolute;
+    top: 0;
+    height: 100%;
+  }
+  .light-hours { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .light-legend { display: flex; gap: 12px; margin-top: 6px; }
+  .leg-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* ── DFD SCREEN ── */
+  .dfd-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+
+  .page-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .page-title i { color: var(--green); }
+
+  /* ── LOGIN OVERLAY ── */
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 20, 18, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  }
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  .login-logo i { font-size: 22px; }
+  .login-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .login-field {
+    margin-bottom: 14px;
+  }
+  .login-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .login-field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s;
+  }
+  .login-field input:focus {
+    border-color: var(--green);
+    background: #fff;
+  }
+  .login-error {
+    font-size: 12px;
+    color: var(--red);
+    background: var(--red-light);
+    border-radius: 7px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .login-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 6px;
+  }
+  .login-btn:hover { background: #2d6535; }
+  .login-demo-hint {
+    margin-top: 18px;
+    background: var(--green-light);
+    border: 1px solid #b6dfbc;
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  .login-demo-hint strong { color: var(--green); display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  .demo-cred { display: flex; justify-content: space-between; margin-top: 5px; }
+  .demo-cred span { color: var(--muted); }
+  .demo-cred code { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 4px; cursor: pointer; }
+  .demo-cred code:hover { background: rgba(58,125,68,.15); color: var(--green); }
+
+  /* mobile nav at bottom for phone mockup feel */
+  .bottom-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--card);
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN OVERLAY ══ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo"><i class="ti ti-feather"></i> GallineroSmart</div>
+    <div class="login-subtitle">Sistema de Monitoreo Avícola · Ingreso seguro</div>
+
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="Ingresa tu usuario" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <div id="login-error" class="login-error"><i class="ti ti-alert-circle"></i> Usuario o contraseña incorrectos.</div>
+
+    <button class="login-btn" onclick="doLogin()"><i class="ti ti-login"></i> Ingresar al sistema</button>
+
+    <div class="login-demo-hint">
+      <strong>🔑 Credenciales demo</strong>
+      <div class="demo-cred">
+        <span>Usuario</span>
+        <code onclick="document.getElementById('login-user').value=this.innerText" title="Haz clic para rellenar">admin</code>
+      </div>
+      <div class="demo-cred">
+        <span>Contraseña</span>
+        <code onclick="document.getElementById('login-pass').value=this.innerText" title="Haz clic para rellenar">1234</code>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Haz clic en los valores para autocompletar.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo"><i class="ti ti-feather"></i> GallineroSmart</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="show('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+    <button class="nav-tab" onclick="show('alarma')"><i class="ti ti-bell"></i> Alarma</button>
+    <button class="nav-tab" onclick="show('temperatura')"><i class="ti ti-temperature"></i> Temp. / Vent.</button>
+    <button class="nav-tab" onclick="show('iluminacion')"><i class="ti ti-sun"></i> Iluminación</button>
+    <button class="nav-tab" onclick="show('alimentos')"><i class="ti ti-grain"></i> Alimentos</button>
+    <button class="nav-tab" onclick="show('estadisticas')"><i class="ti ti-chart-bar"></i> Estadísticas</button>
+    <button class="nav-tab" onclick="show('dfd')"><i class="ti ti-git-branch"></i> DFD</button>
+    <button class="nav-tab" onclick="show('firma')"><i class="ti ti-signature"></i> Aprobación</button>
+  </div>
+  <div class="alarm-badge" onclick="show('alarma')">
+    <div class="status-dot"></div> Sistema OK
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 1 · DASHBOARD
+══════════════════════════════════════════════════════ -->
+<div id="s-dashboard" class="screen active">
+  <div class="page-title"><i class="ti ti-layout-dashboard"></i> Panel Principal</div>
+
+  <!-- KPI row -->
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-temperature"></i> Temperatura</div>
+      <div class="big-val">22<span class="big-unit">°C</span></div>
+      <div class="card-sub">↔ Rango ideal 10–26 °C</div>
+      <div class="gauge-wrap">
+        <div class="gauge-track"><div class="gauge-fill" style="width:50%;background:#3a7d44"></div></div>
+        <div class="gauge-label"><span>0°</span><span>50°</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-drop"></i> Humedad</div>
+      <div class="big-val">61<span class="big-unit">%</span></div>
+      <div class="card-sub">Óptimo 50–70 %</div>
+      <div class="gauge-wrap">
+        <div class="gauge-track"><div class="gauge-fill" style="width:61%;background:#2563a8"></div></div>
+        <div class="gauge-label"><span>0%</span><span>100%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-grain"></i> Nivel alimento</div>
+      <div class="big-val">68<span class="big-unit">%</span></div>
+      <div class="card-sub"><span class="pill pill-green"><i class="ti ti-check"></i> Suficiente</span></div>
+      <div class="gauge-wrap">
+        <div class="gauge-track"><div class="gauge-fill" style="width:68%;background:#3a7d44"></div></div>
+        <div class="gauge-label"><span>Vacío</span><span>Lleno</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-egg"></i> Huevos hoy</div>
+      <div class="big-val">47<span class="big-unit">u</span></div>
+      <div class="card-sub">Promedio semana: 44 u</div>
+      <div style="margin-top:8px">
+        <span class="pill pill-green"><i class="ti ti-trending-up"></i> +7% vs ayer</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Estado sistemas -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-settings"></i> Estado de sistemas</div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">💡 Iluminación LED</div><div class="toggle-sub">14 h/día · ciclo solar activo</div></div>
+        <div class="toggle on" onclick="toggleIt(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">🌀 Extractores aire</div><div class="toggle-sub">Activación &gt; 26 °C</div></div>
+        <div class="toggle" onclick="toggleIt(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">🔥 Calefacción</div><div class="toggle-sub">Activación &lt; 10 °C</div></div>
+        <div class="toggle" onclick="toggleIt(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">💧 Agua por goteo</div><div class="toggle-sub">Presión normal 1.2 bar</div></div>
+        <div class="toggle on" onclick="toggleIt(this)"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">🌀 Comedero automático</div><div class="toggle-sub">3 raciones/día programadas</div></div>
+        <div class="toggle on" onclick="toggleIt(this)"></div>
+      </div>
+    </div>
+
+    <!-- Notificaciones recientes -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-bell"></i> Últimas alertas</div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--green-light);color:var(--green)"><i class="ti ti-check"></i></div>
+        <div><div class="notif-text">Sistema reiniciado correctamente tras corte de luz</div><div class="notif-time">Hace 2 h · RF-04 Reinicio automático</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--amber-light);color:var(--amber)"><i class="ti ti-alert-triangle"></i></div>
+        <div><div class="notif-text">Alimento en silo B llegará al 20% en ~2 días</div><div class="notif-time">Ayer 18:30 · RF-02 Alarma amarilla</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--blue-light);color:var(--blue)"><i class="ti ti-sun"></i></div>
+        <div><div class="notif-text">Ciclo de luz completado: 14 h cumplidas</div><div class="notif-time">Ayer 21:00 · RF-08 Iluminación</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--green-light);color:var(--green)"><i class="ti ti-temperature"></i></div>
+        <div><div class="notif-text">Temperatura estable, pronóstico 18°C min hoy</div><div class="notif-time">Hoy 07:00 · RF-05 Temperatura</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 2 · ALARMA (RF-02)
+══════════════════════════════════════════════════════ -->
+<div id="s-alarma" class="screen">
+  <div class="page-title"><i class="ti ti-bell"></i> Sistema de Alarma — RF-02</div>
+  <div class="grid-3">
+    <!-- Semáforo verde -->
+    <div class="card" style="text-align:center">
+      <div class="card-title" style="justify-content:center"><i class="ti ti-check"></i> Estado actual</div>
+      <div class="alarm-box">
+        <div class="alarm-light alarm-green" id="alarm-light">
+          <div class="alarm-ring"></div>
+          <i class="ti ti-check" style="font-size:28px"></i>
+        </div>
+        <div class="alarm-label" id="alarm-label">VERDE · Todo OK</div>
+        <div class="alarm-desc" id="alarm-desc">Todos los sistemas operando dentro de parámetros normales.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn" onclick="setAlarm('green')">🟢 OK</button>
+          <button class="btn" onclick="setAlarm('amber')">🟡 Aviso</button>
+          <button class="btn btn-danger" onclick="setAlarm('red')">🔴 Alerta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Definición de estados -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-info-circle"></i> Definición de estados</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+        <div style="border-left:4px solid var(--green);padding-left:12px">
+          <div style="font-weight:600;font-size:13px;color:var(--green)">🟢 Verde — Normal</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Sistema funcional. Sin acciones requeridas. Luz indicadora encendida permanentemente.</div>
+        </div>
+        <div style="border-left:4px solid var(--amber);padding-left:12px">
+          <div style="font-weight:600;font-size:13px;color:var(--amber)">🟡 Amarillo — Aviso</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Alimento o agua por acabarse. Requiere reposición pronto. Buzzer intermitente suave.</div>
+        </div>
+        <div style="border-left:4px solid var(--red);padding-left:12px">
+          <div style="font-weight:600;font-size:13px;color:var(--red)">🔴 Rojo — Peligro</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Falla crítica: desconexión, suministros agotados, fallo calefacción/ventilación. Checkeo manual urgente. Buzzer continuo.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notificación móvil simulada -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-device-mobile"></i> Notificación al celular</div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:28px;height:28px;border-radius:6px;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:14px"><i class="ti ti-feather" style="color:var(--green)"></i></div>
+          <div style="font-size:12px;font-weight:600">GallineroSmart</div>
+          <div style="font-size:11px;color:var(--muted);margin-left:auto">ahora</div>
+        </div>
+        <div id="push-title" style="font-size:13px;font-weight:600;margin-bottom:3px">✅ Sistema operando normalmente</div>
+        <div id="push-body" style="font-size:12px;color:var(--muted)">Temperatura 22°C · Alimento 68% · 47 huevos hoy</div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-title"><i class="ti ti-speakerphone"></i> Alarma sonora</div>
+        <table class="tbl">
+          <tr><td style="font-size:12px">🔇 Normal</td><td style="font-size:12px">Silencio</td></tr>
+          <tr><td style="font-size:12px">🔔 Amarillo</td><td style="font-size:12px">Bip cada 5 min (bajo)</td></tr>
+          <tr><td style="font-size:12px">🚨 Rojo</td><td style="font-size:12px">Bip continuo + luz roja</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 3 · TEMPERATURA & VENTILACIÓN (RF-05 + RF-09)
+══════════════════════════════════════════════════════ -->
+<div id="s-temperatura" class="screen">
+  <div class="page-title"><i class="ti ti-temperature"></i> Temperatura y Ventilación — RF-05 / RF-09</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-temperature"></i> Temperatura actual</div>
+      <div class="big-val" id="temp-val">22<span class="big-unit">°C</span></div>
+      <div style="margin-top:8px">
+        <div class="temp-scale">
+          <div class="temp-needle" id="temp-needle" style="left:44%"></div>
+        </div>
+        <div class="temp-labels"><span>0°</span><span>10°</span><span>26°</span><span>50°</span></div>
+      </div>
+      <div style="margin-top:10px">
+        <input type="range" min="0" max="50" value="22" style="width:100%" oninput="updateTemp(this.value)">
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)">Simula temperatura del sensor</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-wind"></i> Control automático</div>
+      <div id="temp-status-box" style="border-radius:8px;padding:12px;background:var(--green-light);margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;color:var(--green)" id="temp-status-text">✅ Temperatura normal</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" id="temp-action-text">Sin acción requerida. Rango ideal activo.</div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">🌀 Extractor de aire</div><div class="toggle-sub" id="fan-sub">Inactivo · Activa &gt;26°C</div></div>
+        <div class="toggle" id="fan-toggle"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">🔥 Calefacción</div><div class="toggle-sub" id="heat-sub">Inactiva · Activa &lt;10°C</div></div>
+        <div class="toggle" id="heat-toggle"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-cloud"></i> Pronóstico meteorológico — RF-05</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="stat-row"><span>Hoy mín/máx</span><span class="stat-val">12 / 24 °C</span></div>
+        <div class="stat-row"><span>Mañana mín/máx</span><span class="stat-val">9 / 21 °C</span></div>
+        <div class="stat-row"><span>Estación actual</span><span class="pill pill-blue"><i class="ti ti-snowflake"></i> Invierno</span></div>
+        <div class="stat-row"><span>Ajuste por estación</span><span class="stat-val">+2°C umbral inf.</span></div>
+        <div class="stat-row"><span>Última actualización</span><span class="stat-val">07:15 am</span></div>
+      </div>
+      <div style="margin-top:12px;background:var(--blue-light);border-radius:8px;padding:10px;font-size:12px;color:var(--blue)">
+        <i class="ti ti-info-circle"></i> Mañana se activa precalentamiento preventivo a las 20:00 (mín. 9°C).
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-line"></i> Historial temperatura últimas 12 horas</div>
+    <svg viewBox="0 0 640 80" class="dfd-svg">
+      <defs>
+        <linearGradient id="tgrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3a7d44" stop-opacity=".3"/>
+          <stop offset="100%" stop-color="#3a7d44" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- grid lines -->
+      <line x1="0" y1="20" x2="640" y2="20" stroke="#e2ddd4" stroke-width="0.5"/>
+      <line x1="0" y1="40" x2="640" y2="40" stroke="#e2ddd4" stroke-width="0.5"/>
+      <line x1="0" y1="60" x2="640" y2="60" stroke="#e2ddd4" stroke-width="0.5"/>
+      <!-- zone indicators -->
+      <rect x="0" y="0" width="640" height="14" fill="#E24B4A" opacity=".08"/>
+      <rect x="0" y="66" width="640" height="14" fill="#3B8BD4" opacity=".08"/>
+      <text x="4" y="11" font-size="9" fill="#b53a2f" font-family="DM Sans,sans-serif">Calor &gt;26°C</text>
+      <text x="4" y="77" font-size="9" fill="#2563a8" font-family="DM Sans,sans-serif">Frío &lt;10°C</text>
+      <!-- data line -->
+      <polyline points="0,55 53,50 107,45 160,42 213,38 267,35 320,32 373,30 427,33 480,37 533,40 587,38 640,36"
+        fill="none" stroke="#3a7d44" stroke-width="2" stroke-linejoin="round"/>
+      <polygon points="0,55 53,50 107,45 160,42 213,38 267,35 320,32 373,30 427,33 480,37 533,40 587,38 640,36 640,80 0,80"
+        fill="url(#tgrad)"/>
+      <!-- x labels -->
+      <text x="0"   y="78" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">19h</text>
+      <text x="160" y="78" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">22h</text>
+      <text x="320" y="78" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">01h</text>
+      <text x="480" y="78" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">04h</text>
+      <text x="610" y="78" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">07h</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 4 · ILUMINACIÓN (RF-08)
+══════════════════════════════════════════════════════ -->
+<div id="s-iluminacion" class="screen">
+  <div class="page-title"><i class="ti ti-sun"></i> Control de Iluminación — RF-08</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-clock"></i> Ciclo solar del día</div>
+      <div class="light-bar">
+        <!-- noche 00-05 -->
+        <div class="light-segment" style="left:0%;width:20.8%;background:#1a1a18;opacity:.7"></div>
+        <!-- amanecer 05-06 LED suplementario -->
+        <div class="light-segment" style="left:20.8%;width:4.2%;background:linear-gradient(to right,#1a1a18,#FFC145)"></div>
+        <!-- día natural 06-19 -->
+        <div class="light-segment" style="left:25%;width:54.2%;background:#FFC145;opacity:.8"></div>
+        <!-- suplemento 19-21 -->
+        <div class="light-segment" style="left:79.2%;width:8.3%;background:#FFE082;opacity:.9"></div>
+        <!-- noche 21-24 -->
+        <div class="light-segment" style="left:87.5%;width:12.5%;background:#1a1a18;opacity:.7"></div>
+        <!-- NOW indicator -->
+        <div style="position:absolute;left:29%;top:0;width:2px;height:100%;background:#3a7d44"></div>
+      </div>
+      <div class="light-hours">
+        <span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span>
+      </div>
+      <div class="light-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#FFC145"></div>Luz natural</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#FFE082"></div>LED suplementario</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#1a1a18"></div>Noche</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#3a7d44"></div>▶ Ahora (07h)</div>
+      </div>
+      <div style="margin-top:12px;background:var(--amber-light);border-radius:8px;padding:10px;font-size:12px;color:var(--amber)">
+        <i class="ti ti-sun"></i> Total luz asegurada hoy: <strong>14 h</strong> (06:00–21:00 · Natural 13h + LED 2h supl.)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-adjustments"></i> Configuración ciclo</div>
+      <div class="stat-row"><span>Horas mínimas/día</span><span class="stat-val">14 h</span></div>
+      <div class="stat-row"><span>Encendido LED automático</span><span class="stat-val">05:00 am</span></div>
+      <div class="stat-row"><span>Apagado LED automático</span><span class="stat-val">21:00 pm</span></div>
+      <div class="stat-row"><span>Intensidad LED</span><span class="stat-val">80 %</span></div>
+      <div class="stat-row"><span>Modo</span><span class="pill pill-green"><i class="ti ti-robot"></i> Automático</span></div>
+      <div style="margin-top:12px">
+        <div class="toggle-row">
+          <div><div class="toggle-label">💡 Encendido automático</div><div class="toggle-sub">Simula amanecer gradualmente</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🌙 Apagado gradual</div><div class="toggle-sub">Simula atardecer 20 min</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">📅 Ajuste estacional</div><div class="toggle-sub">Adapta según época del año</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-bar"></i> Producción de huevos vs horas de luz (últimos 7 días)</div>
+    <svg viewBox="0 0 640 80" class="dfd-svg">
+      <line x1="0" y1="20" x2="640" y2="20" stroke="#e2ddd4" stroke-width="0.5"/>
+      <line x1="0" y1="40" x2="640" y2="40" stroke="#e2ddd4" stroke-width="0.5"/>
+      <line x1="0" y1="60" x2="640" y2="60" stroke="#e2ddd4" stroke-width="0.5"/>
+      <!-- bars (huevos) -->
+      <rect x="10"  y="45" width="70" height="30" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="101" y="40" width="70" height="35" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="192" y="38" width="70" height="37" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="283" y="35" width="70" height="40" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="374" y="30" width="70" height="45" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="465" y="28" width="70" height="47" rx="3" fill="#3a7d44" opacity=".7"/>
+      <rect x="556" y="25" width="70" height="50" rx="3" fill="#c17f24" opacity=".7"/>
+      <!-- labels -->
+      <text x="45"  y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Lun 38u</text>
+      <text x="136" y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Mar 41u</text>
+      <text x="227" y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Mié 42u</text>
+      <text x="318" y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Jue 44u</text>
+      <text x="409" y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Vie 46u</text>
+      <text x="500" y="78" text-anchor="middle" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">Sáb 44u</text>
+      <text x="591" y="78" text-anchor="middle" font-size="9" fill="#c17f24" font-family="DM Sans,sans-serif">Hoy 47u</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 5 · ALIMENTOS & AGUA (RF-07)
+══════════════════════════════════════════════════════ -->
+<div id="s-alimentos" class="screen">
+  <div class="page-title"><i class="ti ti-grain"></i> Alimentos y Agua — RF-07</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-grain"></i> Nivel de silos (sensor ultrasónico)</div>
+      <div class="silo-wrap">
+        <div class="silo-col">
+          <div class="silo-pct">68%</div>
+          <div class="silo-bar" style="height:100px">
+            <div class="silo-fill" style="height:68%;background:var(--green)"></div>
+          </div>
+          <div class="silo-label">Silo A</div>
+        </div>
+        <div class="silo-col">
+          <div class="silo-pct" style="color:var(--amber)">22%</div>
+          <div class="silo-bar" style="height:100px">
+            <div class="silo-fill" style="height:22%;background:var(--amber)"></div>
+          </div>
+          <div class="silo-label">Silo B</div>
+        </div>
+        <div class="silo-col">
+          <div class="silo-pct">85%</div>
+          <div class="silo-bar" style="height:100px">
+            <div class="silo-fill" style="height:85%;background:var(--green)"></div>
+          </div>
+          <div class="silo-label">Silo C</div>
+        </div>
+      </div>
+      <div style="background:var(--amber-light);border-radius:8px;padding:10px;font-size:12px;color:var(--amber);margin-top:8px">
+        <i class="ti ti-alert-triangle"></i> <strong>Silo B</strong> bajo — se estima agotamiento en 2 días. Alarma amarilla activada.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-clock"></i> Programación comedero automático</div>
+      <table class="tbl">
+        <thead><tr><th>Hora</th><th>Ración</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>07:00 am</td><td>400 g</td><td><span class="pill pill-green"><i class="ti ti-check"></i> Dispensado</span></td></tr>
+          <tr><td>12:00 pm</td><td>350 g</td><td><span class="pill pill-green"><i class="ti ti-check"></i> Dispensado</span></td></tr>
+          <tr><td>06:00 pm</td><td>400 g</td><td><span class="pill pill-blue"><i class="ti ti-clock"></i> Pendiente</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px">
+        <div class="toggle-row">
+          <div><div class="toggle-label">🤖 Modo automático</div><div class="toggle-sub">Dispenso automático 3x/día</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">📢 Alerta nivel bajo</div><div class="toggle-sub">Aviso al llegar a 25%</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-drop"></i> Sistema agua por goteo</div>
+      <div class="stat-row"><span>Presión actual</span><span class="stat-val">1.2 bar</span></div>
+      <div class="stat-row"><span>Flujo</span><span class="stat-val">0.8 L/min</span></div>
+      <div class="stat-row"><span>Consumo hoy</span><span class="stat-val">12.4 L</span></div>
+      <div class="stat-row"><span>Estado válvula</span><span class="pill pill-green"><i class="ti ti-check"></i> Abierta</span></div>
+      <div class="stat-row"><span>Sensor presión</span><span class="pill pill-green">Normal</span></div>
+      <div style="margin-top:10px">
+        <div class="toggle-row">
+          <div><div class="toggle-label">💧 Agua continua</div><div class="toggle-sub">Goteo permanente activo</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🚨 Alerta falla presión</div><div class="toggle-sub">Alarma roja si &lt;0.3 bar</div></div>
+          <div class="toggle on" onclick="toggleIt(this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 6 · ESTADÍSTICAS (RF-03)
+══════════════════════════════════════════════════════ -->
+<div id="s-estadisticas" class="screen">
+  <div class="page-title"><i class="ti ti-chart-bar"></i> Estadísticas — RF-03</div>
+  <div class="grid-4">
+    <div class="card" style="background:var(--green-light)">
+      <div class="card-title" style="color:var(--green)"><i class="ti ti-egg"></i> Producción total mes</div>
+      <div class="big-val" style="color:var(--green)">1,342<span class="big-unit">u</span></div>
+      <div class="card-sub" style="color:var(--green)">↑ +8.3% vs mes anterior</div>
+    </div>
+    <div class="card" style="background:var(--blue-light)">
+      <div class="card-title" style="color:var(--blue)"><i class="ti ti-grain"></i> Alimento consumido</div>
+      <div class="big-val" style="color:var(--blue)">34.2<span class="big-unit">kg</span></div>
+      <div class="card-sub" style="color:var(--blue)">1.14 kg / gallina / mes</div>
+    </div>
+    <div class="card" style="background:var(--amber-light)">
+      <div class="card-title" style="color:var(--amber)"><i class="ti ti-alert-circle"></i> Errores del sistema</div>
+      <div class="big-val" style="color:var(--amber)">3<span class="big-unit">ev</span></div>
+      <div class="card-sub" style="color:var(--amber)">2 resueltos auto · 1 manual</div>
+    </div>
+    <div class="card" style="background:var(--green-light)">
+      <div class="card-title" style="color:var(--green)"><i class="ti ti-heart"></i> Índice salud ave</div>
+      <div class="big-val" style="color:var(--green)">94<span class="big-unit">%</span></div>
+      <div class="card-sub" style="color:var(--green)">Basado en temp + postura</div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list"></i> Registro de errores</div>
+      <table class="tbl">
+        <thead><tr><th>Fecha</th><th>Evento</th><th>Resolución</th><th>T. Rec.</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-size:12px">04/06</td>
+            <td style="font-size:12px">Corte de energía</td>
+            <td><span class="pill pill-green" style="font-size:11px">Auto</span></td>
+            <td style="font-size:12px;font-family:'DM Mono',monospace">38 s</td>
+          </tr>
+          <tr>
+            <td style="font-size:12px">02/06</td>
+            <td style="font-size:12px">Silo B &lt; 20%</td>
+            <td><span class="pill pill-amber" style="font-size:11px">Manual</span></td>
+            <td style="font-size:12px;font-family:'DM Mono',monospace">4 h</td>
+          </tr>
+          <tr>
+            <td style="font-size:12px">29/05</td>
+            <td style="font-size:12px">Temp. 27.3°C</td>
+            <td><span class="pill pill-green" style="font-size:11px">Auto</span></td>
+            <td style="font-size:12px;font-family:'DM Mono',monospace">12 s</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-arrows-cross"></i> Cruce de métricas</div>
+      <div class="stat-row"><span>Postura/gallina/día</span><span class="stat-val">0.78 u</span></div>
+      <div class="stat-row"><span>Eficiencia alim. (huevo/kg)</span><span class="stat-val">39.2</span></div>
+      <div class="stat-row"><span>Correlación luz-postura</span><span class="stat-val">0.87 r²</span></div>
+      <div class="stat-row"><span>Temperatura media mes</span><span class="stat-val">19.4 °C</span></div>
+      <div class="stat-row"><span>Días sin alarma roja</span><span class="stat-val">27 días</span></div>
+      <div style="margin-top:10px;background:var(--green-light);border-radius:8px;padding:10px;font-size:12px;color:var(--green)">
+        <i class="ti ti-trending-up"></i> A mayor cumplimiento de 14 h luz, postura sube en promedio 11%.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 7 · DFD
+══════════════════════════════════════════════════════ -->
+<div id="s-dfd" class="screen">
+  <div class="page-title"><i class="ti ti-git-branch"></i> Diagrama de Flujo de Datos (DFD) — Señal Sensor → Actuador</div>
+  <div class="dfd-wrap">
+    <svg viewBox="0 0 680 520" class="dfd-svg" role="img">
+      <title>DFD GallineroSmart — flujo señal sensor a actuador</title>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- ── CAPA 0: SENSORES ── -->
+      <text x="340" y="22" text-anchor="middle" font-size="11" font-weight="500" fill="#7a7568" font-family="DM Sans,sans-serif" letter-spacing="1">SENSORES (Entrada)</text>
+
+      <!-- Sensor Temp -->
+      <rect x="20" y="34" width="120" height="44" rx="8" fill="#e8f0fb" stroke="#2563a8" stroke-width="0.8"/>
+      <text x="80" y="53" text-anchor="middle" font-size="12" font-weight="500" fill="#185FA5" font-family="DM Sans,sans-serif">🌡 Temp / Hum</text>
+      <text x="80" y="68" text-anchor="middle" font-size="10" fill="#185FA5" font-family="DM Sans,sans-serif">DHT22</text>
+
+      <!-- Sensor Luz -->
+      <rect x="160" y="34" width="120" height="44" rx="8" fill="#fef3e2" stroke="#c17f24" stroke-width="0.8"/>
+      <text x="220" y="53" text-anchor="middle" font-size="12" font-weight="500" fill="#854F0B" font-family="DM Sans,sans-serif">☀ Fotorresistor</text>
+      <text x="220" y="68" text-anchor="middle" font-size="10" fill="#854F0B" font-family="DM Sans,sans-serif">LDR</text>
+
+      <!-- Sensor Silo -->
+      <rect x="300" y="34" width="120" height="44" rx="8" fill="#e8f5eb" stroke="#3a7d44" stroke-width="0.8"/>
+      <text x="360" y="53" text-anchor="middle" font-size="12" font-weight="500" fill="#3a7d44" font-family="DM Sans,sans-serif">📡 Ultrasónico</text>
+      <text x="360" y="68" text-anchor="middle" font-size="10" fill="#3a7d44" font-family="DM Sans,sans-serif">HC-SR04 (silo)</text>
+
+      <!-- Sensor Agua -->
+      <rect x="440" y="34" width="120" height="44" rx="8" fill="#e8f0fb" stroke="#2563a8" stroke-width="0.8"/>
+      <text x="500" y="53" text-anchor="middle" font-size="12" font-weight="500" fill="#185FA5" font-family="DM Sans,sans-serif">💧 Flujo/Presión</text>
+      <text x="500" y="68" text-anchor="middle" font-size="10" fill="#185FA5" font-family="DM Sans,sans-serif">Sensor agua</text>
+
+      <!-- Clima API -->
+      <rect x="570" y="34" width="100" height="44" rx="8" fill="#fde8e6" stroke="#b53a2f" stroke-width="0.8"/>
+      <text x="620" y="53" text-anchor="middle" font-size="12" font-weight="500" fill="#a32d2d" font-family="DM Sans,sans-serif">🌐 API Clima</text>
+      <text x="620" y="68" text-anchor="middle" font-size="10" fill="#a32d2d" font-family="DM Sans,sans-serif">RF-05</text>
+
+      <!-- ── FLECHAS SENSORES → MCU ── -->
+      <line x1="80"  y1="78" x2="80"  y2="144" stroke="#2563a8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="220" y1="78" x2="220" y2="144" stroke="#c17f24" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="360" y1="78" x2="360" y2="144" stroke="#3a7d44" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="500" y1="78" x2="500" y2="144" stroke="#2563a8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="620" y1="78" x2="540" y2="144" stroke="#b53a2f" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+      <!-- Arrow labels -->
+      <text x="88"  y="115" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">°C, %HR</text>
+      <text x="228" y="115" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">lux</text>
+      <text x="368" y="115" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">cm</text>
+      <text x="508" y="115" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">bar/L</text>
+      <text x="565" y="110" font-size="9" fill="#b53a2f" font-family="DM Sans,sans-serif">JSON</text>
+
+      <!-- ── CAPA 1: MICROCONTROLADOR ── -->
+      <text x="340" y="140" text-anchor="middle" font-size="11" font-weight="500" fill="#7a7568" font-family="DM Sans,sans-serif" letter-spacing="1">PROCESAMIENTO</text>
+      <rect x="80" y="148" width="530" height="56" rx="10" fill="#1a1a18" stroke="#3a7d44" stroke-width="1.5"/>
+      <text x="345" y="174" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff" font-family="DM Sans,sans-serif">🖥 Microcontrolador / RPi — Lógica de control</text>
+      <text x="345" y="192" text-anchor="middle" font-size="10" fill="#9a9990" font-family="DM Sans,sans-serif">Compara valores con umbrales · Aplica reglas RF-08 / RF-09 · Activa actuadores</text>
+
+      <!-- ── FLECHA MCU → LÓGICA ── -->
+      <line x1="345" y1="204" x2="345" y2="254" stroke="#3a7d44" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <text x="353" y="232" font-size="9" fill="#7a7568" font-family="DM Sans,sans-serif">decisiones</text>
+
+      <!-- ── CAPA 2: LÓGICA / REGLAS ── -->
+      <text x="340" y="250" text-anchor="middle" font-size="11" font-weight="500" fill="#7a7568" font-family="DM Sans,sans-serif" letter-spacing="1">REGLAS DE NEGOCIO</text>
+      <rect x="40" y="258" width="175" height="56" rx="8" fill="#fde8e6" stroke="#b53a2f" stroke-width="0.8"/>
+      <text x="127" y="280" text-anchor="middle" font-size="11" font-weight="500" fill="#a32d2d" font-family="DM Sans,sans-serif">🔥 T &lt; 10°C → Calefacción</text>
+      <text x="127" y="296" text-anchor="middle" font-size="10" fill="#a32d2d" font-family="DM Sans,sans-serif">🌀 T &gt; 26°C → Extractor</text>
+      <text x="127" y="309" text-anchor="middle" font-size="9" fill="#a32d2d" font-family="DM Sans,sans-serif">RF-09</text>
+
+      <rect x="232" y="258" width="175" height="56" rx="8" fill="#fef3e2" stroke="#c17f24" stroke-width="0.8"/>
+      <text x="319" y="280" text-anchor="middle" font-size="11" font-weight="500" fill="#854F0B" font-family="DM Sans,sans-serif">☀ Luz &lt;14h → LED ON</text>
+      <text x="319" y="296" text-anchor="middle" font-size="10" fill="#854F0B" font-family="DM Sans,sans-serif">Simula ciclo solar</text>
+      <text x="319" y="309" text-anchor="middle" font-size="9" fill="#854F0B" font-family="DM Sans,sans-serif">RF-08</text>
+
+      <rect x="424" y="258" width="215" height="56" rx="8" fill="#e8f5eb" stroke="#3a7d44" stroke-width="0.8"/>
+      <text x="531" y="280" text-anchor="middle" font-size="11" font-weight="500" fill="#3a7d44" font-family="DM Sans,sans-serif">📦 Silo &lt;25% → Alarma 🟡</text>
+      <text x="531" y="296" text-anchor="middle" font-size="10" fill="#3a7d44" font-family="DM Sans,sans-serif">Silo vacío / fallo → 🔴</text>
+      <text x="531" y="309" text-anchor="middle" font-size="9" fill="#3a7d44" font-family="DM Sans,sans-serif">RF-02 / RF-07</text>
+
+      <!-- ── FLECHAS REGLAS → ACTUADORES ── -->
+      <line x1="127" y1="314" x2="127" y2="374" stroke="#b53a2f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="319" y1="314" x2="319" y2="374" stroke="#c17f24" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="531" y1="314" x2="531" y2="374" stroke="#3a7d44" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ── CAPA 3: ACTUADORES ── -->
+      <text x="340" y="370" text-anchor="middle" font-size="11" font-weight="500" fill="#7a7568" font-family="DM Sans,sans-serif" letter-spacing="1">ACTUADORES (Salida)</text>
+
+      <rect x="40"  y="378" width="175" height="44" rx="8" fill="#1a1a18" stroke="#b53a2f" stroke-width="0.8"/>
+      <text x="127" y="397" text-anchor="middle" font-size="12" font-weight="500" fill="#fff" font-family="DM Sans,sans-serif">🔥 Calefactor</text>
+      <text x="127" y="413" text-anchor="middle" font-size="10" fill="#9a9990" font-family="DM Sans,sans-serif">Relay + resistencia</text>
+
+      <rect x="232" y="378" width="175" height="44" rx="8" fill="#1a1a18" stroke="#c17f24" stroke-width="0.8"/>
+      <text x="319" y="397" text-anchor="middle" font-size="12" font-weight="500" fill="#fff" font-family="DM Sans,sans-serif">💡 LEDs + Extractor</text>
+      <text x="319" y="413" text-anchor="middle" font-size="10" fill="#9a9990" font-family="DM Sans,sans-serif">PWM + ventilador DC</text>
+
+      <rect x="424" y="378" width="215" height="44" rx="8" fill="#1a1a18" stroke="#3a7d44" stroke-width="0.8"/>
+      <text x="531" y="397" text-anchor="middle" font-size="12" font-weight="500" fill="#fff" font-family="DM Sans,sans-serif">🔔 Alarma + Comedero</text>
+      <text x="531" y="413" text-anchor="middle" font-size="10" fill="#9a9990" font-family="DM Sans,sans-serif">Buzzer + servo/motor</text>
+
+      <!-- ── FLECHAS ACTUADORES → APP ── -->
+      <line x1="127" y1="422" x2="280" y2="466" stroke="#7a7568" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+      <line x1="319" y1="422" x2="319" y2="466" stroke="#7a7568" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+      <line x1="531" y1="422" x2="380" y2="466" stroke="#7a7568" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+      <!-- ── CAPA 4: APP / NOTIF ── -->
+      <rect x="200" y="470" width="280" height="42" rx="10" fill="#e8f0fb" stroke="#2563a8" stroke-width="1"/>
+      <text x="340" y="490" text-anchor="middle" font-size="12" font-weight="600" fill="#185FA5" font-family="DM Sans,sans-serif">📱 App Móvil / Web — RF-01</text>
+      <text x="340" y="506" text-anchor="middle" font-size="10" fill="#185FA5" font-family="DM Sans,sans-serif">Dashboard · Notificaciones push · Estadísticas</text>
+
+      <!-- ── REINICIO LOOP (RF-04) ── -->
+      <path d="M 670 176 Q 680 345 670 422" fill="none" stroke="#3a7d44" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+      <text x="672" y="310" font-size="9" fill="#3a7d44" font-family="DM Sans,sans-serif" transform="rotate(90,672,310)">RF-04 Reinicio auto</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 8 · FIRMA DE APROBACIÓN
+══════════════════════════════════════════════════════ -->
+<div id="s-firma" class="screen">
+  <div class="page-title"><i class="ti ti-signature"></i> Aprobación del Diseño — Firma del Cliente</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-checklist"></i> Pantallas aprobadas</div>
+      <table class="tbl">
+        <thead><tr><th>Pantalla</th><th>Req.</th><th>Estado</th></tr></thead>
+        <tbody id="approval-table">
+          <tr><td>Dashboard principal</td><td>RF-01</td><td><span class="pill pill-green" id="ap1"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Alarma semáforo</td><td>RF-02</td><td><span class="pill pill-green" id="ap2"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Temperatura / Ventilación</td><td>RF-09</td><td><span class="pill pill-green" id="ap3"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Iluminación ciclo solar</td><td>RF-08</td><td><span class="pill pill-green" id="ap4"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Alimentos y Agua</td><td>RF-07</td><td><span class="pill pill-green" id="ap5"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Estadísticas</td><td>RF-03</td><td><span class="pill pill-green" id="ap6"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>DFD Sensor→Actuador</td><td>Arq.</td><td><span class="pill pill-green" id="ap7"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Pronóstico meteorológico</td><td>RF-05</td><td><span class="pill pill-green" id="ap8"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+          <tr><td>Reinicio automático</td><td>RF-04</td><td><span class="pill pill-green" id="ap9"><i class="ti ti-check"></i> Aprobado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-user"></i> Datos del acuerdo</div>
+      <div class="stat-row"><span>Proyecto</span><span class="stat-val" style="font-size:12px">GallineroSmart v1.0</span></div>
+      <div class="stat-row"><span>Cliente</span><span class="stat-val" style="font-size:12px">Cooperativa Avícola</span></div>
+      <div class="stat-row"><span>Grupo desarrollador</span><span class="stat-val" style="font-size:12px">Equipo #__</span></div>
+      <div class="stat-row"><span>Etapa</span><span class="pill pill-blue">Etapa 2 · Diseño</span></div>
+      <div class="stat-row"><span>Fecha</span><span class="stat-val" id="fecha-hoy" style="font-size:12px"></span></div>
+      <div class="stat-row"><span>Estado aprobación</span><span class="pill pill-amber" id="status-firma"><i class="ti ti-clock"></i> Pendiente</span></div>
+
+      <div style="margin-top:16px">
+        <div class="card-title"><i class="ti ti-pencil"></i> Firma digital del cliente</div>
+        <canvas id="sig-canvas" width="340" height="100"
+          style="border:1px solid var(--border);border-radius:8px;cursor:crosshair;background:#fafaf8;display:block;width:100%"
+          onmousedown="startDraw(event)" onmousemove="draw(event)" onmouseup="stopDraw()"
+          ontouchstart="startDrawT(event)" ontouchmove="drawT(event)" ontouchend="stopDraw()">
+        </canvas>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" onclick="clearSig()"><i class="ti ti-trash"></i> Limpiar</button>
+          <button class="btn btn-primary" onclick="firmar()"><i class="ti ti-check"></i> Firmar y aprobar diseño</button>
+        </div>
+      </div>
+      <div id="firma-ok" style="display:none;margin-top:12px;background:var(--green-light);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">✅</div>
+        <div style="font-weight:600;color:var(--green);font-size:14px">Diseño aprobado por el cliente</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" id="firma-ts"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-note">GallineroSmart · Mockup Digital Interactivo — Etapa 2: Diseño · Cooperativa Avícola Local</div>
+
+<script>
+// ── LOGIN ──
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err  = document.getElementById('login-error');
+  if (user === 'admin' && pass === '1234') {
+    const overlay = document.getElementById('login-overlay');
+    overlay.style.transition = 'opacity .4s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.style.display = 'none', 420);
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+// Auto-focus
+window.addEventListener('DOMContentLoaded', () => {
+  const u = document.getElementById('login-user');
+  if (u) setTimeout(() => u.focus(), 100);
+});
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── TOGGLE ──
+function toggleIt(el) { el.classList.toggle('on'); }
+
+// ── ALARM ──
+function setAlarm(color) {
+  const light = document.getElementById('alarm-light');
+  const label = document.getElementById('alarm-label');
+  const desc  = document.getElementById('alarm-desc');
+  const badge = document.querySelector('.alarm-badge');
+  const dot   = document.querySelector('.status-dot');
+  const pTitle= document.getElementById('push-title');
+  const pBody = document.getElementById('push-body');
+  light.className = 'alarm-light';
+  if(color==='green'){
+    light.classList.add('alarm-green');
+    light.innerHTML='<div class="alarm-ring"></div><i class="ti ti-check" style="font-size:28px"></i>';
+    label.textContent='VERDE · Todo OK';
+    desc.textContent='Todos los sistemas operando dentro de parámetros normales.';
+    badge.style.background='var(--green-light)'; badge.style.color='var(--green)'; badge.style.borderColor='#b6dfbc';
+    dot.style.background='var(--green)';
+    pTitle.textContent='✅ Sistema operando normalmente';
+    pBody.textContent='Temperatura 22°C · Alimento 68% · 47 huevos hoy';
+  } else if(color==='amber'){
+    light.classList.add('alarm-amber');
+    light.innerHTML='<div class="alarm-ring"></div><i class="ti ti-alert-triangle" style="font-size:28px"></i>';
+    label.textContent='AMARILLO · Aviso de reposición';
+    desc.textContent='Silo B llegará al 20% en 2 días. Reponer alimento pronto.';
+    badge.style.background='var(--amber-light)'; badge.style.color='var(--amber)'; badge.style.borderColor='#f5d9a8';
+    dot.style.background='var(--amber)';
+    pTitle.textContent='🟡 Aviso: Silo B casi vacío';
+    pBody.textContent='Stock para ~2 días. Requiere reposición pronto.';
+  } else {
+    light.classList.add('alarm-red');
+    light.innerHTML='<div class="alarm-ring"></div><i class="ti ti-alert-octagon" style="font-size:28px"></i>';
+    label.textContent='ROJO · Checkeo manual urgente';
+    desc.textContent='Falla crítica detectada. Revise el sistema inmediatamente.';
+    badge.style.background='var(--red-light)'; badge.style.color='var(--red)'; badge.style.borderColor='#f5c3be';
+    dot.style.background='var(--red)';
+    pTitle.textContent='🔴 ALERTA: Fallo de sistema';
+    pBody.textContent='Revisión manual urgente requerida en el gallinero.';
+  }
+}
+
+// ── TEMPERATURE ──
+function updateTemp(v) {
+  v = parseInt(v);
+  document.getElementById('temp-val').innerHTML = v+'<span class="big-unit">°C</span>';
+  const pct = (v/50)*100;
+  document.getElementById('temp-needle').style.left = pct+'%';
+  const box  = document.getElementById('temp-status-box');
+  const txt  = document.getElementById('temp-status-text');
+  const act  = document.getElementById('temp-action-text');
+  const fan  = document.getElementById('fan-toggle');
+  const heat = document.getElementById('heat-toggle');
+  const fanS = document.getElementById('fan-sub');
+  const heatS= document.getElementById('heat-sub');
+  if(v > 26){
+    box.style.background='var(--red-light)';
+    txt.style.color='var(--red)'; txt.textContent='🌡 Temperatura ALTA — Extractor ON';
+    act.textContent='Extractor activado automáticamente. Monitoreo continuo.';
+    fan.classList.add('on'); heat.classList.remove('on');
+    fanS.textContent='✅ ACTIVO — Temperatura alta'; heatS.textContent='Inactiva';
+  } else if(v < 10){
+    box.style.background='var(--blue-light)';
+    txt.style.color='var(--blue)'; txt.textContent='❄ Temperatura BAJA — Calefacción ON';
+    act.textContent='Calefacción activada automáticamente. Monitoreo continuo.';
+    heat.classList.add('on'); fan.classList.remove('on');
+    heatS.textContent='✅ ACTIVA — Temperatura baja'; fanS.textContent='Inactivo';
+  } else {
+    box.style.background='var(--green-light)';
+    txt.style.color='var(--green)'; txt.textContent='✅ Temperatura normal';
+    act.textContent='Sin acción requerida. Rango ideal activo.';
+    fan.classList.remove('on'); heat.classList.remove('on');
+    fanS.textContent='Inactivo · Activa >26°C'; heatS.textContent='Inactiva · Activa <10°C';
+  }
+}
+
+// ── SIGNATURE CANVAS ──
+let drawing=false, ctx, lastX, lastY;
+window.addEventListener('load',()=>{
+  const canvas=document.getElementById('sig-canvas');
+  if(!canvas)return;
+  ctx=canvas.getContext('2d');
+  ctx.strokeStyle='#1a1a18'; ctx.lineWidth=2; ctx.lineCap='round';
+  const d=new Date();
+  document.getElementById('fecha-hoy').textContent=d.toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'});
+});
+function getPos(e,canvas){
+  const r=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/r.width;
+  return{x:(e.clientX-r.left)*scaleX, y:(e.clientY-r.top)*scaleX};
+}
+function startDraw(e){
+  drawing=true;
+  const p=getPos(e,e.target);
+  lastX=p.x; lastY=p.y;
+}
+function draw(e){
+  if(!drawing)return;
+  const p=getPos(e,e.target);
+  ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke();
+  lastX=p.x; lastY=p.y;
+}
+function stopDraw(){ drawing=false; }
+function startDrawT(e){ e.preventDefault(); startDraw(e.touches[0]); }
+function drawT(e){ e.preventDefault(); draw(e.touches[0]); }
+function clearSig(){
+  const canvas=document.getElementById('sig-canvas');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('firma-ok').style.display='none';
+  document.getElementById('status-firma').className='pill pill-amber';
+  document.getElementById('status-firma').innerHTML='<i class="ti ti-clock"></i> Pendiente';
+}
+function firmar(){
+  document.getElementById('firma-ok').style.display='block';
+  document.getElementById('status-firma').className='pill pill-green';
+  document.getElementById('status-firma').innerHTML='<i class="ti ti-check"></i> Aprobado';
+  const now=new Date();
+  document.getElementById('firma-ts').textContent='Firmado el '+now.toLocaleDateString('es-CL')
+    +' a las '+now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+</script>
+</body>
+</html>
